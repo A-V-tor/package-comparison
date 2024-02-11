@@ -78,9 +78,9 @@ def main(branch, branch2):
     version_release_difference = _.to_dict(orient='records')
 
     result_dict = {
-        "sisyphus_intersection": first_branch_intersection,
-        "p10_intersection": second_branch_intersection,
-        "great-version-release": version_release_difference,
+        "first_branch_intersection": first_branch_intersection,
+        "second_branch_intersection": second_branch_intersection,
+        "version_release_difference": version_release_difference,
     }
     click.echo(result_dict)
 
