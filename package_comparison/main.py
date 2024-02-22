@@ -1,15 +1,12 @@
-
+from version_utils import rpm
+from version_utils.errors import RpmError
 import requests
-from dataclasses import dataclass, asdict
-import pandas as pd
+from dataclasses import dataclass
 import click
 import concurrent.futures
-
-
-def parse_version(version: str) -> list:
-    version_components = version.split('.')
-    version_numbers = [component for component in version_components if component.isdigit()]
-    return version_numbers
+from simple_term_menu import TerminalMenu
+from tabulate import tabulate
+from tqdm import tqdm
 
 
 @dataclass
@@ -24,24 +21,42 @@ class Package:
     source: str
 
     def __eq__(self, other):
-            return isinstance(other, Package) and self.__dict__ == other.__dict__
+        return isinstance(other, Package) and self.__dict__ == other.__dict__
 
     def __hash__(self):
-        return hash((self.name, self.epoch, self.version, self.release, self.arch, self.disttag, self.buildtime, self.source))
+        return hash(
+            (
+                self.name,
+                self.epoch,
+                self.version,
+                self.release,
+                self.arch,
+                self.disttag,
+                self.buildtime,
+                self.source,
+            )
+        )
 
 
+def make_request(url) -> dict[str:Package]:
+    try:
+        res = requests.get(url, timeout=10)
+    except TimeoutError:
+        raise KeyboardInterrupt('Server is not responding')
 
-def make_request(url) -> set[Package]:
-    res = requests.get(url)
+    # проверка что ответ с данными
+    if str(res.status_code)[0] != '2':
+        raise ValueError('Incorrect server response')
+
     res_json = res.json().get('packages')
-    name_space = set()
+    name_space = dict()
     if res_json is None:
-        raise TypeError("Check the branch name")
+        raise TypeError('Check the branch name')
 
-    for dictpackege in res_json:
-        p = Package(**dictpackege)
+    for dictpackage in res_json:
+        p = Package(**dictpackage)
         if p not in name_space:
-            name_space.add(p)
+            name_space[p.name] = p
 
     return name_space
 
@@ -51,38 +66,80 @@ def make_request(url) -> set[Package]:
 @click.argument('branch2')
 def main(branch, branch2):
     URL = 'https://rdb.altlinux.org/api/export/branch_binary_packages/'
-    with concurrent.futures.ThreadPoolExecutor() as executor:
+    with tqdm(total=60) as pbar:
+        pbar.update(10)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
             future1 = executor.submit(make_request, URL + branch)
             future2 = executor.submit(make_request, URL + branch2)
 
             result1 = future1.result()
+            pbar.update(15)
             result2 = future2.result()
+            pbar.update(15)
 
-    first_branch_intersection = result1.intersection(result2)
-    second_branch_intersection = result2.intersection(result1)
+        first_branch_difference = set(result1.values()).difference(
+            set(result2.values())
+        )
+        second_branch_difference = set(result2.values()).difference(
+            set(result1.values())
+        )
+        pbar.update(10)
 
-    # Преобразуем список объектов в DataFrame
-    df = pd.DataFrame([asdict(package) for package in result1])
-    df2 = pd.DataFrame([asdict(package) for package in result2])
+        version_release_difference = set()
 
-    # объединение для сравнивания версий
-    merged_df = pd.merge(df, df2, on='name', suffixes=('_sisyphus', '_p10'))
+        error_packages = 0
+        for package in result1.values():
+            if package.name in result2:
+                first_package_compared = f'{package.name}-{package.version}-{package.release}.{package.arch}'
+                package_2 = result2[package.name]
+                second_package_compared = f'{package_2.name}-{package_2.version}-{package_2.release}.{package_2.arch}'
 
-    filtered_df = merged_df[
-        merged_df.apply(lambda row: parse_version(row['version_sisyphus']) > parse_version(row['version_p10']), axis=1)
-    ]
+                try:
+                    res = rpm.compare_packages(
+                        first_package_compared, second_package_compared
+                    )
 
-    _ = filtered_df.filter(like='_sisyphus')
-    _ = _.rename(columns=lambda x: x.replace('_sisyphus', ''))
+                    # если версия из 1 ветки больше, то ее добавляем в результат
+                    if res == 1:
+                        version_release_difference.add(package)
 
-    version_release_difference = _.to_dict(orient='records')
+                except RpmError:
+                    error_packages += 1
 
-    result_dict = {
-        "first_branch_intersection": first_branch_intersection,
-        "second_branch_intersection": second_branch_intersection,
-        "version_release_difference": version_release_difference,
-    }
-    click.echo(result_dict)
+        pbar.update(10)
+
+        result_dict = {
+            'first_branch_difference': first_branch_difference,
+            'second_branch_difference': second_branch_difference,
+            'version_release_difference': version_release_difference,
+            'error': error_packages,
+        }
+
+        options = [
+            'first_branch_difference',
+            'second_branch_difference',
+            'version_release_difference',
+        ]
+        terminal_menu = TerminalMenu(options)
+
+        while True:
+            menu_entry_index = terminal_menu.show()
+
+            # Обработка выхода из меню
+            if menu_entry_index is None:
+                break
+
+            # Получаем выбранное значение
+            selected_value = result_dict[options[menu_entry_index]]
+            click.echo_via_pager(
+                tabulate(
+                    [
+                        [i.name, i.version, i.release, i.arch, i.source]
+                        for i in selected_value
+                    ],
+                    headers=['name', 'version', 'release', 'arch', 'source'],
+                )
+            )
 
 
 if __name__ == '__main__':

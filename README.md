@@ -36,9 +36,18 @@ Cайт работающий на базе этого API -  https://packages.al
   pip install -r requirements.txt
 ```
 
+## Build the utility
+1) poetry build
+2) python -m pip install dist/package_comparison-0.1.0-py3-none-any.whl
+
+
 ## Run script
-`Usage: python -m package_comparison.main [OPTIONS] BRANCH BRANCH2`
+`Usage: basalt-start [OPTIONS] BRANCH BRANCH2`
 
 ```
-  python -m package_comparison.main sisyphus p10
+  basalt-start sisyphus p10
 ```
+
+## An example of the finished utility
+
+[![asciicast](https://asciinema.org/a/WVAcxfr0uhJ2dTz4KJv19q4tw.svg)](https://asciinema.org/a/WVAcxfr0uhJ2dTz4KJv19q4tw)
