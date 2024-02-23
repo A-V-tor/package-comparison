@@ -39,8 +39,8 @@ There are ready-made sources in the dist directory, but they require Python 3.11
 You can change it to a manual version in the pyproject.toml file
 
 ## Build the utility
-1) poetry build # if you changed the configuration file pyproject.toml
-2) python -m pip install dist/package_comparison-0.1.0-py3-none-any.whl
+1) `poetry build` # if you changed the configuration file pyproject.toml
+2) `python -m pip install dist/package_comparison-0.1.0-py3-none-any.whl`
 
 
 ## Run script
@@ -63,5 +63,10 @@ You can change it to a manual version in the pyproject.toml file
 ```
 
 ## An example of the finished utility
+### Mac OS
 
 [![asciicast](https://asciinema.org/a/WVAcxfr0uhJ2dTz4KJv19q4tw.svg)](https://asciinema.org/a/WVAcxfr0uhJ2dTz4KJv19q4tw)
+
+### Ubuntu 22.04
+
+[![asciicast](https://asciinema.org/a/8pQHSpsIkiXEB3LLfl11EPTvu.svg)](https://asciinema.org/a/8pQHSpsIkiXEB3LLfl11EPTvu)
