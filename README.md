@@ -33,11 +33,13 @@ Cайт работающий на базе этого API -  https://packages.al
 
 ## Install dependencies
 ```
-  pip install -r requirements.txt
+  pip install poetry
 ```
+There are ready-made sources in the dist directory, but they require Python 3.11
+You can change it to a manual version in the pyproject.toml file
 
 ## Build the utility
-1) poetry build
+1) poetry build # if you changed the configuration file pyproject.toml
 2) python -m pip install dist/package_comparison-0.1.0-py3-none-any.whl
 
 
@@ -46,6 +48,18 @@ Cайт работающий на базе этого API -  https://packages.al
 
 ```
   basalt-start sisyphus p10
+```
+
+## The result of the work is the following structure
+
+```
+  {
+    'first_branch_difference': first_branch_difference, # many packages unique to the first branch set[Package]
+    'second_branch_difference': second_branch_difference, # many packages unique to the second branch set[Package]
+    'version_release_difference': version_release_difference, # many packages whose version is higher in the first branch compared to the second set[Package]
+    'error': error_packages, # error counter when comparing versions
+  }
+
 ```
 
 ## An example of the finished utility
