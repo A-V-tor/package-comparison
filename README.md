@@ -26,6 +26,10 @@ Cайт работающий на базе этого API -  https://packages.al
 ```
   git clone git@github.com:A-V-tor/package-comparison.git
 ```
+or
+```
+  git clone https://github.com/A-V-tor/package-comparison.git
+```
 
 ```
   cd package-comparison
@@ -70,3 +74,7 @@ You can change it to a manual version in the pyproject.toml file
 ### Ubuntu 22.04
 
 [![asciicast](https://asciinema.org/a/8pQHSpsIkiXEB3LLfl11EPTvu.svg)](https://asciinema.org/a/8pQHSpsIkiXEB3LLfl11EPTvu)
+
+###  ALT 10
+
+[![asciicast](https://asciinema.org/a/OhUuhxkX5po3hz6quaFQfMoK0.svg)](https://asciinema.org/a/OhUuhxkX5po3hz6quaFQfMoK0)
